@@ -2,9 +2,17 @@ from SerialInterface import SerialInterface
 import re
 
 
-def _is_image_line(line) -> bool:
+def _is_image_line(line: str) -> bool:
     r = re.match(r"[0-9a-f]{8}(: )([0-9a-f]{2} ){1,16}   .{1,16}", line)
     return bool(r)
+
+
+def _format_line(line: str) -> str:
+    line = line[10:-20]
+    line = line.replace(" ", "")
+    line = line.replace('\n', '')
+    line = line.replace('\r', '')
+    return line
 
 
 class ImageDump:
@@ -18,7 +26,7 @@ class ImageDump:
         self.filename = filename
 
     def run(self):
-        file = open(self.filename, 'w')
+        file = open(self.filename, 'wb')
         self.ser.flush()
         self.ser.write(self.dump_cmd)
         while True:
@@ -27,7 +35,9 @@ class ImageDump:
                 break
             else:
                 if _is_image_line(line):
-                    print(line)
-                    file.write(line)
+                    temp = line[0:10]
+                    line = _format_line(line)
+                    print(temp + line)
+                    file.write(line.encode('utf-8'))
         file.close()
 

@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 import serial
 
 
@@ -11,11 +11,13 @@ class SerialInterface:
         self.ser.flushInput()
         self.ser.flushOutput()
 
-    def write(self, string: str):
-        self.ser.write(string.encode('utf-8'))
+    def write(self, string: str, encode: bool = True):
+        if encode:
+            string = string.encode('utf-8')
+        self.ser.write(string)
         self.ser.write(b'\n')
 
-    def read_line(self) -> str:
+    def read_line(self, decode: bool = True) -> str or bytes:
         done = False
         line = ''
         while not done:
@@ -23,7 +25,9 @@ class SerialInterface:
             if char == b'\n':
                 return line
             else:
-                line += char.decode('utf-8')
+                if decode:
+                    char = char.decode('utf-8')
+                line += char
                 if line == self.prompt_text:
                     return line
 

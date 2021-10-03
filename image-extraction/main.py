@@ -6,12 +6,12 @@ from ImageDump import ImageDump
 
 
 def dump_image():
-    run_count = 3
+    run_count = 5
 
-    port = "COM5"
+    port = "COM3"
     filename = "img"
     prompt_text = "ath> "
-    cmd = "md.b 0x0 0x0000ffff"
+    cmd = "md.b 0x0 0xffffffff"
     ser = SerialInterface(port, prompt_text)
     imgDmp = ImageDump(filename, cmd, ser)
     for i in range(run_count):
