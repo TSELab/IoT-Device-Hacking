@@ -11,7 +11,7 @@ def dump_image():
     port = "COM3"
     filename = "img"
     prompt_text = "ath> "
-    cmd = "md.b 0x0 0xffffffff"
+    cmd = "md.b 0x0 0xfffff"
     ser = SerialInterface(port, prompt_text)
     imgDmp = ImageDump(filename, cmd, ser)
     for i in range(run_count):
