@@ -10,6 +10,11 @@ notes:
     Main board does not seem to have an easily accessible pinout,
     would need to use debugging pins at the bottom power unit.
   - >
+    When booted, it checks for an X-loader on mmc-0 twice. It uses a
+    Texas Instruments X-loader v1.51. When boot fail, it boots from the eMMC
+    and loads mmc-1, where it succeeds. 
+  - > 
+    Gets straight into U-Boot
     
 external-sources:
   - https://labs.f-secure.com/archive/alexa-are-you-listening/
