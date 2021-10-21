@@ -14,7 +14,10 @@ notes:
     Texas Instruments X-loader v1.51. When boot fail, it boots from the eMMC
     and loads mmc-1, where it succeeds. 
   - > 
-    Gets straight into U-Boot
-    
+    Gets straight into U-Boot without any obvious way of interrupting it
+  - >
+    Disk image provided in the external source is running Debian 8. Located in
+    the last partition. To my naked eye, seems like a fresh install partitioned
+    according to Ti's specifications, if the source is to be believed.
 external-sources:
   - https://labs.f-secure.com/archive/alexa-are-you-listening/
