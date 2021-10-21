@@ -6,6 +6,13 @@ Major Components:
   - Winbond W975166KB-25 6706BS100ZZ2 720HUA TWN
   - Qualcom chip
   - SKY 243ET 31BLK
+Notes:
+        - >
+                /home/homekit/var/hk_device_id contains an id. In the same directory,
+                hk_add has some mention of a dimmer switch, may have been used by previous
+                owner of device.
+        - >
+                Interesting js file /www/licenses.js. Can be found in repo
 Login:
   Username: root
   Password: toor
