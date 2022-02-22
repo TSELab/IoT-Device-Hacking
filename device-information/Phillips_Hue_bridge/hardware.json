@@ -26,6 +26,7 @@
 			"revision": "1717",
 			"capacity": "1Gb",
 			"interface": "SPI",
+			"memory mapped at": "0x2c000000 - 0x2c800000",
 			"datasheet": "https://www.mouser.com/datasheet/2/949/w25n01gv_revl_050918_unsecured-1489588.pdf"
 		},
 		{
