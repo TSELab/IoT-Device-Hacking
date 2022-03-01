@@ -1,0 +1,11 @@
+device-name: NVIDIA SHIELD TV 4K HDR
+upc: 1267402144
+manufacturer: NVIDIA
+hardware:
+  ics:
+    -
+      type:
+      manufacturer:
+      name:
+      datasheet:
+notes:
