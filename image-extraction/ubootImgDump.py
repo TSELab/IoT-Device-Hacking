@@ -30,8 +30,8 @@ progUpdateInterval = 25000
 
 def txt2bin():
 	progSym = ["/", "|", "\\", "-", "|"]
-	with open(inputFile, "r") as inputStream:
-		with open(outputFile, "wb") as outputStream:
+	with open(targetTxt, "r") as inputStream:
+		with open(targetFile, "wb") as outputStream:
 			line = inputStream.readline()
 			byteArr = bytearray([])
 			linNum = 0;
