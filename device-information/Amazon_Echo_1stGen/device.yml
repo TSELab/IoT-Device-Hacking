@@ -1,10 +1,48 @@
-major-component-list:
-  - IT DM3725CUS100
-  - MICRON 6SC17 D9RWH
-  - SanDisk SDIN7DP2-49
-  - Qualcomm QCA6234X-AM2D
-  - TI 661 TPS 65910A1
-  - TI 69K DAC 32031
+device-name: Amazon Echo
+upc: 848719071733
+manufacturer: Amazon
+hardware:
+  ics:
+    -
+      type: 
+      manufacturer: TI
+      name: DM3725CUS100
+      datasheet:
+    -
+      type: RAM
+      manufacturer: Micron
+      name: D9RWH 6SC17 KHJP
+      datasheet: N/A
+    -
+      type: NAND flash
+      manufacturer: SandDisk
+      name: SDIN7DP2-4G
+      datasheet:
+    -
+      type: wireless module
+      manufacturer: Qualcomm
+      name: QCA6234X-AM2D
+      datasheet: https://www.datasheets.com/en/part-details/qca6234x-am2d-qualcomm-64831788
+    -
+      type: 
+      manufacturer: TI
+      name: TPS 65910A1 661 C2ET G4
+      datasheet:
+    -
+      type: 
+      manufacturer: TI
+      name: DAC 32031 69K CJ22
+      datasheet:
+    -
+      type: 
+      manufacturer: TI
+      name: 53312 67 CJV1
+      datasheet:
+    -
+      type: 
+      manufacturer: TI
+      name: TPA311002 67TG4 AHG9
+      datasheet:
 notes:
   - >
     Main board does not seem to have an easily accessible pinout,
