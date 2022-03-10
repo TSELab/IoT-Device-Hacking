@@ -1,2 +1,14 @@
-Philips_Hue_Lightstips:
-    cpu: RM21 z0001m b01p4t 2051
+device-name: Philips Hue Lightstrip Plus
+upc:
+manufacturer: Philips
+hardware:
+  ics:
+    -
+      type:
+      manufacturer:
+      name:
+      datasheet:
+notes:
+  - >
+    Seems to use some sort of PWM to control the intensity of RGB and some
+    extra FW value. Could there may be some issues regarding color accuracy.
