@@ -3,8 +3,6 @@ from enum import Enum
 import networkx as nx
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
-import pydot
-from networkx.drawing.nx_pydot import graphviz_layout
 
 class FileTypes(Enum):
 	UNKNOWN = -1
@@ -14,7 +12,7 @@ class FileTypes(Enum):
 
 class NodeColors(Enum):
 	UNTRACKED = "#ff834d"
-	RESERVED = "#ffe859"
+	DIR = "#ffe859"
 	LINK = "#ff40d6"
 	CHANGED = "#26ffe5"
 	TRACKED = "#8876ff"
@@ -26,7 +24,7 @@ class DirFile:
 		self.fileType = ftype
 		self.changed = False
 		i = len(self.name) - 1
-		while self.name[i] != "/":
+		while self.name[i] != "/" and i >= 0:
 			i -= 1
 		self.baseName = self.name[i + 1:]
 	def __str__(self):
@@ -46,11 +44,11 @@ class DirFile:
 	def FileType(self):
 		return self.fileType
 	def BaseName(self):
-		i = 10
+		i = 8
 		retStr = self.baseName
 		while i < len(self.name):
 			retStr = retStr[0 : i] + "\n" + retStr[i : ]
-			i += 11
+			i += 9
 		return retStr
 	def findMissing(self):
 		if self.PackageName() == "" and self.fileType != FileTypes.DIR:
@@ -63,7 +61,8 @@ class DirFile:
 class DirLinks(DirFile):
 	def __init__(self, fname, ftype):
 		super().__init__(fname, ftype)
-		self.linkPath = os.readlink(self.name)
+		self.linkPath = "." + os.readlink(self.name)
+		self.linkDest = None
 	def findLink(self, root):
 		self.linkDest = root.searchPath(self.linkPath)
 		if self.linkDest == None:
@@ -97,8 +96,7 @@ class DirTree(DirFile):
 		if super().searchPath(path):
 			return self
 		for childFile in self.subDirs + self.subfiles + self.sublinks:
-			pattern = re.compile(childFile.Name())
-			if pattern.match(path):
+			if childFile.Name() in path:
 				return childFile.searchPath(path)
 		return None
 	def findLink(self, root):
@@ -111,20 +109,47 @@ class DirTree(DirFile):
 		for childFiles in self.subFiles():
 			childFiles.findMissing()
 	def fillGraph(self, G, baseNameDict, nodeColors):
-		for childFiles in self.subFiles():
-			G.add_node(childFiles.Name())
-			G.add_edge(self.Name(), childFiles.Name())
-
-			baseNameDict[childFiles.Name()] = childFiles.BaseName()
-			if childFiles.FileType() == FileTypes.LINK:
+		# Process links
+		ulinkNum = 0
+		for childLinks in self.sublinks:
+			if childLinks.linkDest:
+				G.add_node(childLinks.Name())
+				G.add_edge(self.Name(), childLinks.Name())
+				baseNameDict[childLinks.Name()] = childLinks.BaseName()
 				nodeColors.append(NodeColors.LINK.value)
-			elif childFiles.isChanged():
-				nodeColors.append(NodeColors.CHANGED.value)
-			elif childFiles.PackageName() != "":
-				nodeColors.append(NodeColors.TRACKED.value)
 			else:
-				nodeColors.append(NodeColors.UNTRACKED.value)
+				ulinkNum += 1
+		if ulinkNum:
+			G.add_node(f"ulink-{self.Name()}")
+			G.add_edge(self.Name(), f"ulink-{self.Name()}")
+			baseNameDict[f"ulink-{self.Name()}"] = f"{ulinkNum} links"
+			nodeColors.append(NodeColors.LINK.value)
+
+		#Process files
+		trackedNum = 0
+		untrackedNum = 0
+		for childFiles in self.subfiles:
+			if childFiles.PackageName() != "":
+				trackedNum += 1
+			else:
+				untrackedNum += 1
+		if trackedNum:
+			G.add_node(f"tracked-{self.Name()}")
+			G.add_edge(self.Name(), f"tracked-{self.Name()}")
+			baseNameDict[f"tracked-{self.Name()}"] = f"{trackedNum} files\ntracked"
+			nodeColors.append(NodeColors.TRACKED.value)
+		if untrackedNum:
+			G.add_node(f"untracked-{self.Name()}")
+			G.add_edge(self.Name(), f"untracked-{self.Name()}")
+			baseNameDict[f"untracked-{self.Name()}"] = f"{untrackedNum} files\nuntracked"
+			nodeColors.append(NodeColors.UNTRACKED.value)
+
+		#Process dir
 		for childDirs in self.subDirs:
+			G.add_node(childDirs.Name())
+			G.add_edge(self.Name(), childDirs.Name())
+			baseNameDict[childDirs.Name()] = childDirs.BaseName()
+			nodeColors.append(NodeColors.DIR.value)
 			childDirs.fillGraph(G, baseNameDict, nodeColors)
 	def drawLinks(self, G):
 		for ln in self.sublinks + self.subDirs:
@@ -148,27 +173,28 @@ def tagPackage(logFile, rootdir):
 					continue
 				if targetFile.PackageName() != "":
 					print(f"{targetFile.Name()} already claimed by package {targetFile.PackageName()}, overriding to {pkgName}")
-				if targetFile.FileType() == FileTypes.LINK:
+				if targetFile.FileType() == FileTypes.LINK and targetFile.linkDest:
 					targetFile.linkDest.setPkg(pkgName)
 				targetFile.setPkg(pkgName)
 
-root = DirTree("./PhilipsHueBridge", FileTypes.DIR)
+root = DirTree(".", FileTypes.DIR)
 root.findLink(root)
-tagPackage("./testBom.txt", root)
+tagPackage("../test.txt", root)
 root.findMissing()
 
-plt.rcParams["figure.figsize"] = (20, 10)
+plt.rcParams["figure.figsize"] = (150, 20)
 G = nx.Graph()
 G.add_node(root.Name())
 baseNameDict = {root.Name() : root.BaseName()}
-nodeColors = [NodeColors.UNTRACKED.value]
+nodeColors = [NodeColors.DIR.value]
 root.fillGraph(G, baseNameDict, nodeColors)
-graphLayout = graphviz_layout(G, prog="dot")
-root.drawLinks(G)
+graphLayout = nx.nx_pydot.graphviz_layout(G, prog = "dot")
+#root.drawLinks(G)
 nx.draw_networkx(G, graphLayout, with_labels = False, node_color = nodeColors, node_size = 1000, node_shape = "o")
 nx.draw_networkx_labels(G, graphLayout, labels = baseNameDict, verticalalignment = "top")
 
-legend_elems = [Line2D([0], [0], color = "w", markerfacecolor = NodeColors.UNTRACKED.value, marker = "o", label = "Untracked File", markersize = 12),
+legend_elems = [Line2D([0], [0], color = "w", markerfacecolor = NodeColors.DIR.value, marker = "o", label = "Directories", markersize = 12),
+		Line2D([0], [0], color = "w", markerfacecolor = NodeColors.UNTRACKED.value, marker = "o", label = "Untracked File", markersize = 12),
 		Line2D([0], [0], color = "w", markerfacecolor = NodeColors.TRACKED.value, marker = "o", label = "Tracked File", markersize = 12),
 		Line2D([0], [0], color = "w", markerfacecolor = NodeColors.LINK.value, marker = "o", label = "Links", markersize = 12),
 		Line2D([0], [0], color = "w", markerfacecolor = NodeColors.CHANGED.value, marker = "o", label = "Changed Since Last Version", markersize = 12)]
