@@ -1,0 +1,31 @@
+device-name: Google Home Mini
+upc: 842776102140
+manufacturer: Google
+hardware:
+  ics:
+    -
+      type: i2C bus + LED driver
+      manufacturer: NXP
+      name: PCA9955BT
+      datasheet: https://www.alldatasheet.com/datasheet-pdf/pdf/1242478/NXP/PCA9955BTWQ900.html
+    -
+      type: NAND flash
+      manufacturer: Toshiba
+      name: TC58NYG1S3H-BAI6
+      datasheet: On Slack 
+    -
+      type: Multimedia processor SoC
+      manufacturer: Marvell
+      name: 88DE3006-BTK2
+      datasheet: https://justlv.medium.com/google-home-mini-teardown-comparison-to-echo-dot-and-giving-technology-a-voice-c59a23724a26
+    -
+      type: Wireless SoC
+      manufacturer: Marvell
+      name: 88W8887-NAA2
+      datasheet: https://justlv.medium.com/google-home-mini-teardown-comparison-to-echo-dot-and-giving-technology-a-voice-c59a23724a26
+    -
+      type: RAM
+      manufacturer: SKhynix
+      name: H5TC4G63CFA
+      datasheet: https://www.datasheets.com/en/part-details/h5tc4g63cfr-pba-sk-hynix-inc-62627404#datasheet
+notes:
