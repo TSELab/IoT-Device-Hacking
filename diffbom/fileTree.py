@@ -1,14 +1,16 @@
 import os, re, hashlib
 from enum import Enum
 
-excludeList = ["./usr/lib/opkg", "./dev", "./proc", "./sys", "./tmp"]
-silent = False
+excludeList = ["./dev", "./proc", "./sys", "./tmp", "./run"]
+silent = True
 
 class FileTypes(Enum):
 	UNKNOWN = -1
 	FILE = 0
 	DIR = 1
 	LINK = 2
+	SUB_ELF = 3
+	SUB_REGULAR = 4
 
 class DirFile:
 	def __getHash(self):
@@ -25,15 +27,16 @@ class DirFile:
 		if self.fileType == FileTypes.FILE:
 			with open(self.name, "rb") as f:
 				magic = f.read(4)
-				if magic == bytearray([0x7f, ord('E'), ord('L'), ord('F')]):
-					self.fSubType = "ELF"
-				else:
-					self.fSubType = "Regular"
+			if magic == bytearray([0x7f, ord('E'), ord('L'), ord('F')]):
+				self.fSubType = FileTypes.SUB_ELF 
+			else:
+				self.fSubType = FileTypes.SUB_REGULAR 
 
 	def __init__(self, fname, ftype):
 		self.packageName = ""
 		self.name = fname
 		self.fileType = ftype
+		self.fSubType = None
 		self.__getHash()
 		self.__getType()
 	def __str__(self):
@@ -54,6 +57,8 @@ class DirFile:
 		return self.fileType
 	def SubType(self):
 		return self.fSubType
+	def SHA1Sum(self):
+		return self.sha1.hexdigest()
 
 def findSlash(loc, direction):
 	if direction == 0:
@@ -130,7 +135,7 @@ class DirTree(DirFile):
 			links.findLink(root)
 	def subFiles(self):
 		return self.subDirs + self.subfiles + self.sublinks
-	def findMissing(self):
+	def printUnclaimed(self):
 		if self.name not in excludeList:
 			untrackedNum = 0
 			for files in self.subfiles + self.sublinks:
@@ -138,14 +143,12 @@ class DirTree(DirFile):
 					untrackedNum += 1
 			# All files untracked
 			if untrackedNum == len(self.subfiles + self.sublinks) and len(self.subfiles + self.sublinks) != 0:
-				if not silent:
-					print(f"{untrackedNum} files and links in {self.Name()} untracked")
+				print(f"{untrackedNum} files and links in {self.Name()} untracked")
 			# Some files untracked
 			elif untrackedNum > 0:
 				for files in self.subfiles + self.sublinks:
 					if files.PackageName() == "":
-						if not silent:
-							print(f"File {files.Name()} untracked")
+						print(f"File {files.Name()} untracked")
 			for childDirs in self.subDirs:
 				childDirs.findMissing()
 	def checkCoverage(self):
@@ -161,7 +164,7 @@ class DirTree(DirFile):
 				totUntracked += 1
 				if childFiles.FileType() == FileTypes.LINK:
 					totULinks += 1
-				elif childFiles.SubType() == "ELF":
+				elif childFiles.SubType() == FileTypes.SUB_ELF:
 					totUELFs += 1
 				else:
 					totUFiles += 1
@@ -176,12 +179,13 @@ class DirTree(DirFile):
 
 def tagPackage(logDict, rootdir):
 	num404 = 0
-	numDual = 0
+	dualFiles = set() 
+	numChanged = 0
 	for pkgName in logDict.keys():
-		for lines in logDict[pkgName]:
-			lines = lines.strip("\n")
+		for file in logDict[pkgName]:
+			lines = file["name"]
 			if lines[-1] == "/":
-				lines = lines[:-1]
+				continue # Ignore directory tagging
 			targetFile = rootdir.searchPath("." + lines)
 			if targetFile == None:
 				num404 += 1
@@ -189,15 +193,18 @@ def tagPackage(logDict, rootdir):
 					print(f"File .{lines} for package {pkgName} not found")
 				continue
 			if targetFile.PackageName() != "":
-				numDual += 1
+				dualFiles.add(targetFile.Name())
 				if not silent:
 					print(f"{targetFile.Name()} already claimed by package {targetFile.PackageName()}, overriding to {pkgName}")
 			targetFile.setPkg(pkgName)
-	return num404, numDual
+			if file["sha1Sum"] != None:
+				if targetFile.SubType() == FileTypes.SUB_ELF and targetFile.SHA1Sum() != file["sha1Sum"]: # Likely insecure, but who would target this program?
+					numChanged += 1
+	return len(dualFiles), numChanged, num404
 
-# pkgFileDict["pkgName"] = ["list", "of", "files"]
-def initDir(dirPath, pkgFileDict):
-	root = DirTree(dirPath, FileTypes.DIR)
+def initDir(sbomDict):
+	root = DirTree(".", FileTypes.DIR)
 	root.findLink(root)
-	print(tagPackage(pkgFileDict, root))
-	return root
+	tagData = tagPackage(sbomDict, root)
+	covData = root.checkCoverage()
+	return root, tuple(list(tagData) + list(covData))

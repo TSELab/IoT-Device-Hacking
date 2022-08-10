@@ -1,6 +1,5 @@
-import os, files, bomParser
+import os, fileTree, bomParser
 
-os.chdir("RAX120/RAX120-root")
-root = files.initDir(".", bomParser.opkg.readInfoDir())
-root.findMissing()
-print(root.checkCoverage())
+os.chdir("root20190925")
+root, metrics = fileTree.initDir(bomParser.opkg.readInfoDir("./usr/lib/opkg/info"))
+print(metrics)
