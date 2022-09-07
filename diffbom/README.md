@@ -1,11 +1,13 @@
 DiffBOM 
 ====
 
-A tool for determining SBOM coverage of IoT file systems. WIP paper describing this tool is available at zhiruih/diffbom-paper.
+A tool for determining SBOM coverage of IoT file systems and docker images. WIP paper describing this tool is available at zhiruih/diffbom-paper.
 
 # How to use
 
-bomParser parses SBOMs. Currently supports SPDX (requires spdx/tools-python) and opkg metadata.
+dockerConn pulls docker images from Docker Hub and extract into a file system. First initialize with dockerConn.initDocker(), then extract with dockerConn.pullXtractImage(imgName, saveDirName).
+
+bomParser parses SBOMs. Currently supports SPDX and opkg/dpkg metadata.
 - To parse SPDX, use bomParser.spdx.parseSpdx(spdxFileLoc_str) 
 - To parse opkg metadata, use bomParser.opkg.readInfoDir(metadataDir_str)
 
