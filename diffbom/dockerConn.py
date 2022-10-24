@@ -5,7 +5,11 @@ client = None
 
 def initDocker():
 	global client
-	client = docker.from_env()
+	try:
+		client = docker.from_env()
+	except Exception as e:
+		print("Is docker running?")
+		raise e
 	if(client):
 		return True
 	return False
@@ -35,6 +39,13 @@ def pullXtractImage(imgName, fname):
 				print("Unable to create container")
 			img.remove()
 
+def queryImg(term, limit):
+	imgs = client.images.search(term, limit)
+	return [entry["name"] for entry in imgs]
+
+def exportManifest(imgName, fname):
+	os.system(f"docker manifest inspect {imgName} > {fname}")
+
 if __name__ == "__main__":
 	initDocker()
-	pullXtractImage("busybox", "test")
+	print(queryImg("sql", 10))

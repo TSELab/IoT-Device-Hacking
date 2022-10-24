@@ -1,8 +1,7 @@
-import os, re, hashlib
+import os, sys, re, hashlib
 from enum import Enum
 
-excludeList = ["./dev", "./proc", "./sys", "./tmp", "./run"]
-silent = True
+from config import excludeList, silent
 
 class FileTypes(Enum):
 	UNKNOWN = -1
@@ -143,14 +142,14 @@ class DirTree(DirFile):
 					untrackedNum += 1
 			# All files untracked
 			if untrackedNum == len(self.subfiles + self.sublinks) and len(self.subfiles + self.sublinks) != 0:
-				print(f"{untrackedNum} files and links in {self.Name()} untracked")
+				sys.stderr.write(f"{untrackedNum} files and links in {self.Name()} untracked\n")
 			# Some files untracked
 			elif untrackedNum > 0:
 				for files in self.subfiles + self.sublinks:
 					if files.PackageName() == "":
-						print(f"File {files.Name()} untracked")
+						sys.stderr.write(f"File {files.Name()} untracked\n")
 			for childDirs in self.subDirs:
-				childDirs.findMissing()
+				childDirs.printUnclaimed()
 	def checkCoverage(self):
 		if self.name in excludeList:
 			return 0, 0, 0, 0, 0
@@ -190,12 +189,12 @@ def tagPackage(logDict, rootdir):
 			if targetFile == None:
 				num404 += 1
 				if not silent:
-					print(f"File .{lines} for package {pkgName} not found")
+					sys.stderr.write(f"File .{lines} for package {pkgName} not found\n")
 				continue
 			if targetFile.PackageName() != "":
 				dualFiles.add(targetFile.Name())
 				if not silent:
-					print(f"{targetFile.Name()} already claimed by package {targetFile.PackageName()}, overriding to {pkgName}")
+					sys.stderr.write(f"{targetFile.Name()} already claimed by package {targetFile.PackageName()}, overriding to {pkgName}\n")
 			targetFile.setPkg(pkgName)
 			if file["sha1Sum"] != None:
 				if targetFile.SubType() == FileTypes.SUB_ELF and targetFile.SHA1Sum() != file["sha1Sum"]: # Likely insecure, but who would target this program?
